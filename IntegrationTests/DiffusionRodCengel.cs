@@ -3,7 +3,7 @@ using MGroup.Constitutive.ConvectionDiffusion.BoundaryConditions;
 using MGroup.FEM.ConvectionDiffusion.Line;
 using MGroup.MSolve.Discretization.Entities;
 
-namespace RodTest
+namespace ConvectionDiffusionTest
 {
     public static class DiffusionRodCengel
     {

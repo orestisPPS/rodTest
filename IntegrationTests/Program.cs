@@ -8,11 +8,19 @@ using MGroup.NumericalAnalyzers.Logging;
 using MGroup.Constitutive.ConvectionDiffusion.BoundaryConditions;
 using MGroup.FEM.ConvectionDiffusion.Line;
 
-namespace RodTest
+namespace ConvectionDiffusionTest
+
 {
     class Program
     {
         static void Main(string[] args)
+        {
+            //RodTest();
+            //Provatidis2dDiffusionSteadyState();
+            Reddy2dDiffusionSteadyState();
+        }
+
+        static void RodTest()
         {
             var model = DiffusionRodCengel.CreateModel();
             var solverFactory = new SkylineSolver.Factory();
@@ -21,7 +29,6 @@ namespace RodTest
             var problem = new ProblemConvectionDiffusion(model, algebraicModel, solver);
 
             var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
-            //var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, linearAnalyzer);
 
             var dynamicAnalyzerBuilder = new NewmarkDynamicAnalyzer.Builder(model, algebraicModel, solver, problem, linearAnalyzer, timeStep: 0.5, totalTime: 1000);
             dynamicAnalyzerBuilder.SetNewmarkParameters(beta: 0.25, gamma: 0.5, allowConditionallyStable: true);
@@ -33,9 +40,6 @@ namespace RodTest
                         };
             linearAnalyzer.LogFactory = new LinearAnalyzerLogFactory(watchDofs, algebraicModel);
 
-
-            //staticAnalyzer.Initialize();
-            //staticAnalyzer.Solve();
             dynamicAnalyzer.Initialize();
             dynamicAnalyzer.Solve();
 
@@ -43,5 +47,95 @@ namespace RodTest
             DiffusionRodCengel.CheckResults(log.DOFValues[watchDofs[0].node, watchDofs[0].dof]);
             //Console.WriteLine("break");
         }
+
+        static void Provatidis2dDiffusionSteadyState()
+        {
+            var model = Provatidis2DQuadSteadyStateTest.CreateModel();
+            var solverFactory = new SkylineSolver.Factory();
+            var algebraicModel = solverFactory.BuildAlgebraicModel(model);
+            var solver = solverFactory.BuildSolver(algebraicModel);
+            var problem = new ProblemConvectionDiffusion(model, algebraicModel, solver);
+
+            var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
+
+            var dynamicAnalyzerBuilder = new NewmarkDynamicAnalyzer.Builder(model, algebraicModel, solver, problem, linearAnalyzer, timeStep: 0.5, totalTime: 1000);
+            dynamicAnalyzerBuilder.SetNewmarkParameters(beta: 0.25, gamma: 0.5, allowConditionallyStable: true);
+            var dynamicAnalyzer = dynamicAnalyzerBuilder.Build();
+
+            /*            var watchDofs = new List<(INode node, IDofType dof)>()
+                        {
+                            (model.NodesDictionary[2], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[3], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[5], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[6], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[8], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[9], ConvectionDiffusionDof.UnknownVariable)
+                        };*/
+
+            var watchDofs = new List<(INode node, IDofType dof)>()
+            {
+                (model.NodesDictionary[5], ConvectionDiffusionDof.UnknownVariable),
+
+            };
+            linearAnalyzer.LogFactory = new LinearAnalyzerLogFactory(watchDofs, algebraicModel);
+
+            dynamicAnalyzer.Initialize();
+            dynamicAnalyzer.Solve();
+
+            DOFSLog log = (DOFSLog)linearAnalyzer.Logs[0];
+            var numericalSolution = new double[watchDofs.Count];
+            for (int i = 0; i < numericalSolution.Length; i++)
+            {
+                numericalSolution[i] = log.DOFValues[watchDofs[i].node, watchDofs[i].dof];
+            }
+            Provatidis2DQuadSteadyStateTest.CheckResults(numericalSolution);
+            //Console.WriteLine("break");
+        }
+
+        static void Reddy2dDiffusionSteadyState()
+        {
+            var model = Reddy2dHeatDiffusionTest.CreateModel();
+            var solverFactory = new SkylineSolver.Factory();
+            var algebraicModel = solverFactory.BuildAlgebraicModel(model);
+            var solver = solverFactory.BuildSolver(algebraicModel);
+            var problem = new ProblemConvectionDiffusion(model, algebraicModel, solver);
+
+            var linearAnalyzer = new LinearAnalyzer(algebraicModel, solver, problem);
+
+            var dynamicAnalyzerBuilder = new NewmarkDynamicAnalyzer.Builder(model, algebraicModel, solver, problem, linearAnalyzer, timeStep: 0.5, totalTime: 10000);
+            dynamicAnalyzerBuilder.SetNewmarkParameters(beta: 0.25, gamma: 0.5, allowConditionallyStable: true);
+            var dynamicAnalyzer = dynamicAnalyzerBuilder.Build();
+
+            /*            var watchDofs = new List<(INode node, IDofType dof)>()
+                        {
+                            (model.NodesDictionary[2], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[3], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[5], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[6], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[8], ConvectionDiffusionDof.UnknownVariable),
+                            (model.NodesDictionary[9], ConvectionDiffusionDof.UnknownVariable)
+                        };*/
+
+            var watchDofs = new List<(INode node, IDofType dof)>()
+            {
+                (model.NodesDictionary[6], ConvectionDiffusionDof.UnknownVariable),
+                (model.NodesDictionary[7], ConvectionDiffusionDof.UnknownVariable),
+
+            };
+            linearAnalyzer.LogFactory = new LinearAnalyzerLogFactory(watchDofs, algebraicModel);
+
+            dynamicAnalyzer.Initialize();
+            dynamicAnalyzer.Solve();
+
+            DOFSLog log = (DOFSLog)linearAnalyzer.Logs[0];
+            var numericalSolution = new double[watchDofs.Count];
+            for (int i = 0; i < numericalSolution.Length; i++)
+            {
+                numericalSolution[i] = log.DOFValues[watchDofs[i].node, watchDofs[i].dof];
+            }
+            Reddy2dHeatDiffusionTest.CheckResults(numericalSolution);
+            //Console.WriteLine("break");
+        }
+
     }
 }
